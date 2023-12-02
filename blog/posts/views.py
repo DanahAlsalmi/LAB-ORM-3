@@ -5,16 +5,20 @@ from django.utils import timezone
 import sqlite3
 
 def add_blog_view(request: HttpRequest):
-
+    if not request.user.is_staff:
+        return render(request, 'main/not_auth.html', status=401)
+    msg = None
     if request.method == "POST":
-        new_post = Post(title=request.POST["title"], content=request.POST["content"], is_publishd= True if "is_publishd" in request.POST else False, publishd_at=timezone.now()  ,  category=request.POST["category"])
-        if 'poster' in request.FILES:
-            new_post.poster = request.FILES["poster"]
-        new_post.save()
+        try:
+            new_post = Post(title=request.POST["title"], content=request.POST["content"], is_publishd= True if "is_publishd" in request.POST else False, publishd_at=timezone.now()  ,  category=request.POST["category"])
+            if 'poster' in request.FILES:
+                new_post.poster = request.FILES["poster"]
+            new_post.save()
 
-        return redirect("posts:post_home_view")
-
-    return render(request, "posts/add.html" , {"categories" : Post.categories})
+            return redirect("posts:post_home_view")
+        except Exception as e:
+            msg = f"An error occured, please fill in all fields and try again . {e}"
+    return render(request, "posts/add.html" , {"categories" : Post.categories , 'msg' :msg})
 
 def post_home_view(request: HttpRequest):
 
@@ -49,10 +53,13 @@ except sqlite3.Error as er:
 
 
 def update_post_view(request: HttpRequest, posts_id):
+     
+     if not request.user.is_staff:
+        return render(request, "main/not_auth.html", status=401)
 
-    posts = Post.objects.get(id=posts_id)
+     posts = Post.objects.get(id=posts_id)
 
-    if request.method == "POST":
+     if request.method == "POST":
         posts.title = request.POST["title"]
         posts.content = request.POST["content"]
         # posts.is_publishd = request.POST["is_publishd"]
@@ -64,10 +71,13 @@ def update_post_view(request: HttpRequest, posts_id):
 
         return redirect('posts:post_detail_view', posts_id=posts.id)
 
-    return render(request, "posts/update.html", {"posts" : posts , "categories"  : Post.categories})
+     return render(request, "posts/update.html", {"posts" : posts , "categories"  : Post.categories})
 
 
 def delete_post_view(request: HttpRequest, posts_id):
+
+    if not request.user.is_superuser:
+        return render(request, "main/not_auth.html", status=401)
 
     posts = Post.objects.get(id=posts_id)
     posts.delete()

@@ -129,6 +129,8 @@
 
         <div class="d-flex justify-content-between ">
           <h4>{{posts.publishd_at}}</h4>
+
+          {% if request.user.is_staff %}
           <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
               aria-expanded="false">
@@ -140,6 +142,7 @@
             </ul>
           </div>
         </div>
+        {% endif %}
         <p>{{ posts.content }}</p>
       </div>
     </div>
@@ -190,6 +193,7 @@
   </section> -->
 
   <section class="row mt-5">
+    {% if request.user.is_authenticated %}
     <h2>Add Review Reviews:</h2>
     <div class="col-5">
 
@@ -221,6 +225,13 @@
 
 
     </div>
+    {%  else %}
+
+    <p class="p-3 border border-1 ">
+      To post a review please <a href="{% url 'accounts:login_view' %}">sign in</a>.
+    </p>
+
+    {% endif %}
   </section>
 
 
